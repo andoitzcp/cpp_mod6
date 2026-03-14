@@ -10,6 +10,7 @@ class ScalarConverter
 
     private:
         static std::string trimLiteral(const std::string& literal);
+        static int countChar(const std::string& s, char c);
         static int detectType(const std::string& literal);
         static bool isChar(const std::string& literal);
         static bool isInt(const std::string& literal);

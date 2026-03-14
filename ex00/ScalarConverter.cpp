@@ -7,20 +7,34 @@
 
 std::string ScalarConverter::trimLiteral(const std::string& literal)
 {
-    size_t to = literal.length();
-    while (--to > 0)
-    {if (literal[to] != ' ')
-            break ;
-    }
-    size_t from = 0;
-    while (from < to)
+    std::string::const_iterator itb;
+    for (itb = literal.begin(); itb != literal.end(); itb++)
     {
-        if (literal[from] != ' ')
+        if (!std::isspace(*itb))
             break ;
-        from++;
     }
-    return literal.substr(from, from - to + 1);
+    std::string::const_iterator ite;
+    for (ite = literal.end(); ite != itb; ite--)
+    {
+        if (!std::isspace(*ite) && *ite != '\0' )
+            break ;
+    }
+    std::string trimmed;
+    return trimmed.assign(itb, ++ite);
 }
+
+int ScalarConverter::countChar(const std::string& s, char c)
+{
+    std::string::const_iterator it;
+    int count = 0;
+    for (it = s.begin(); it != s.end(); ++it)
+    {
+        if (*it == c)
+            count++;
+    }
+    return (count);
+}
+    
 
 void ScalarConverter::convert(const std::string& literal)
 {
@@ -47,59 +61,41 @@ bool ScalarConverter::isChar(const std::string& literal)
 
 bool ScalarConverter::isInt(const std::string& literal)
 {
-    //if (!ScalarConverter::isChar(literal))
-    //    return false;
-    if (literal.find_first_not_of("-0123456789") != std::string::npos)
-        return false;
-    size_t negPos = literal.find('-');
-    if (negPos != 0 && negPos != std::string::npos)
-        return false;
-    size_t plusPos = literal.find('+');
-    if (plusPos != 0 && plusPos != std::string::npos)
-        return false;
-    return true;
+    std::string::size_type otherChar = literal.find_first_not_of("-0123456789");
+    std::string::size_type negPos = literal.find('-');
+    std::string::size_type plusPos = literal.find('+');
+
+    return otherChar == std::string::npos
+        && (negPos == 0 || negPos == std::string::npos)
+        && (plusPos == 0 || plusPos == std::string::npos);
 }
 
 bool ScalarConverter::isDouble(const std::string& literal)
 {
-    if (literal.find_first_not_of("-0123456789.") != std::string::npos)
-        return false;
-    size_t negPos = literal.find('-');
-    if (negPos != 0 && negPos != std::string::npos)
-        return false;
-    size_t plusPos = literal.find('+');
-    if (plusPos != 0 && plusPos != std::string::npos)
-        return false;
-    size_t len =literal.length();
-    int count = 0;
-    size_t i = 0;
-    while (i < len)
-    {
-        if (literal[i++] == '.')
-            count++;
-    }
-    return count == 1;
+    std::string::size_type otherChar = literal.find_first_not_of("-0123456789.");
+    std::string::size_type negPos = literal.find('-');
+    std::string::size_type plusPos = literal.find('+');
+    int dotCount = ScalarConverter::countChar(literal, '.');
+
+    return otherChar == std::string::npos
+        && (negPos == 0 || negPos == std::string::npos)
+        && (plusPos == 0 || plusPos == std::string::npos)
+        && dotCount == 1;
 }
 
 bool ScalarConverter::isFloat(const std::string& literal)
 {
-    if (literal.find_first_not_of("-0123456789.f") != std::string::npos)
-        return false;
-    size_t negPos = literal.find('-');
-    if (negPos != 0 && negPos != std::string::npos)
-        return false;
-    size_t plusPos = literal.find('+');
-    if (plusPos != 0 && plusPos != std::string::npos)
-        return false;
-    size_t len =literal.length();
-    int count = 0;
-    size_t i = 0;
-    while (i < len)
-    {
-        if (literal[i++] == '.')
-            count++;
-    }
-    return count == 1 && literal[len - 1] == 'f';
+
+    std::string::size_type otherChar = literal.find_first_not_of("-0123456789.f");
+    std::string::size_type negPos = literal.find('-');
+    std::string::size_type plusPos = literal.find('+');
+    int dotCount = ScalarConverter::countChar(literal, '.');
+
+    return otherChar == std::string::npos
+        && (negPos == 0 || negPos == std::string::npos)
+        && (plusPos == 0 || plusPos == std::string::npos)
+        && dotCount == 1
+        && *(literal.end() - 1) == 'f';
 }
 
 bool ScalarConverter::isPseudoLiteral(const std::string& literal)
@@ -111,8 +107,8 @@ bool ScalarConverter::isPseudoLiteral(const std::string& literal)
 
 void ScalarConverter::printChar(char c)
 {
-    std::cout << "This is char" << std::endl;
-    std::cout << "char: " << c << "\n"
+    std::string ch = (c > 31 && c < 127) ? std::string(1, c) : "non printable";
+    std::cout << "char: " << ch << "\n"
               << "int: " << static_cast<int>(c) << "\n"
               << "float: " << static_cast<float>(c) << "f\n"
               << "double: " << static_cast<double>(c) << std::endl;
@@ -121,8 +117,9 @@ void ScalarConverter::printChar(char c)
 
 void ScalarConverter::printInt(int i)
 {
-    std::cout << "This is int" << std::endl;
-    std::cout << "char: " << static_cast<char>(i) << "\n"
+    //std::string ch = std::isprint(i) ? std::string(1, i) : "non printable";
+    std::string ch = (i > 31 && i < 127) ? std::string(1, i) : "non printable";
+    std::cout << "char: " << ch << "\n"
               << "int: " << i << "\n"
               << "float: " << static_cast<float>(i) << "f\n"
               << "double: " << static_cast<double>(i) << std::endl;
@@ -131,8 +128,8 @@ void ScalarConverter::printInt(int i)
 
 void ScalarConverter::printFloat(float f)
 {
-    std::cout << "This is float" << std::endl;
-    std::cout << "char: " << static_cast<char>(f) << "\n"
+    std::string ch = (f > 31 && f < 127) ? std::string(1, f) : "non printable";
+    std::cout << "char: " << ch << "\n"
               << "int: " << static_cast<int>(f) << "\n"
               << "float: " << f << "f\n"
               << "double: " << static_cast<double>(f) << std::endl;
@@ -141,8 +138,8 @@ void ScalarConverter::printFloat(float f)
 
 void ScalarConverter::printDouble(double d)
 {
-    std::cout << "This is double" << std::endl;
-    std::cout << "char: " << static_cast<char>(d) << "\n"
+    std::string ch = (d > 31 && d < 127) ? std::string(1, d) : "non printable";
+    std::cout << "char: " << ch << "\n"
               << "int: " << static_cast<int>(d) << "\n"
               << "float: " << static_cast<float>(d) << "f\n"
               << "double: " << d << std::endl;
@@ -151,9 +148,8 @@ void ScalarConverter::printDouble(double d)
 
 void ScalarConverter::printPseudoLiteral(const std::string& pl)
 {
-    std::cout << "This is pseudo" << std::endl;
-    std::cout << "char: Non displayable\n"
-              << "int: " << pl << "\n"
+    std::cout << "char: impossible\n"
+              << "int: impossible\n"
               << "float: " << pl << "f\n"
               << "double: " << pl << std::endl;
     return ;
